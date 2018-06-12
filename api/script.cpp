@@ -6,6 +6,20 @@
 
 namespace olcl
 {
+  namespace
+  {
+    symbol * val_to_symbol(node * type)
+    {
+      if (type->type != node_type::t_value)
+      {
+        // TODO: log error?
+        return nullptr;
+      }
+
+      return &type->value;
+    }
+  }
+
   script::script(olcl::node * ast_)
     : code(ast_)
   {
@@ -15,7 +29,12 @@ namespace olcl
 
   symbol * script::findSymbol(std::string id) const
   {
-    // TODO: Find that symbol
+    for (auto b : *code->module.bindings)
+    {
+      if (*b->binding.name == id)
+        return val_to_symbol(b->binding.value);
+    }
+
     return nullptr;
   }
 }

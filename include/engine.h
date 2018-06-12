@@ -1,12 +1,11 @@
 #pragma once
 
+#include "symbol.h"
 #include "script.h"
 
 
 namespace olcl
 {
-  struct symbol;
-  
   class engine
   {
   public:

@@ -14,6 +14,8 @@ namespace olcl { namespace parsing {
     node * parse_expression(parser::state &state);
     node * parse_expression(node * left_operand, parser::state &state, int base_priority);
 
+    node * parse_statement(parser::state &state);
+
     node * parse_binding(parser::state &state);
     node *parse_module(parser::state &state);
 
@@ -125,7 +127,7 @@ namespace olcl { namespace parsing {
 
               while (state.peek().sub_type != token_sub_type::t_brace_curly_right)
               {
-                container.block.code->push_back(parse_unit(state));
+                container.block.code->push_back(parse_statement(state));
                 
                 if (state.is_error_occurred())
                   return nullptr;
@@ -437,6 +439,41 @@ namespace olcl { namespace parsing {
 
     node * parse_statement(parser::state &state)
     {
+      if (state.peek().type == token_type::t_identifier && state.peek().value == "if")
+      {
+        state.move();
+        node * condition = parse_unit(state);
+        node * on_true = parse_statement(state);
+        node * on_false = nullptr;
+
+        if (state.peek().type == token_type::t_identifier && state.peek().value == "else")
+        {
+          state.move();
+          on_false = parse_statement(state);
+        }
+
+        node & container = *(new node);
+        container.type = node_type::t_stmt_if;
+        container.stmt_if.condition = condition;
+        container.stmt_if.on_true = on_true;
+        container.stmt_if.on_false = on_false;
+        return &container;
+      }
+
+      if (state.peek().type == token_type::t_identifier && state.peek().value == "return")
+      {
+        state.move();
+        node & container = *(new node);
+        container.type = node_type::t_stmt_return;
+        container.stmt_return.expression = parse_unit(state);
+        return &container;
+      }
+
+      return parse_unit(state);
+    }
+
+    node * parse_module_statement(parser::state &state)
+    {
       if (state.peek().type == token_type::t_identifier)
       {
         if (state.peek().value == "import")
@@ -460,7 +497,7 @@ namespace olcl { namespace parsing {
 
       while (!state.is_eof() && !state.is_error_occurred())
       {
-        container.module.bindings->push_back(parse_statement(state));
+        container.module.bindings->push_back(parse_module_statement(state));
 
         if (state.is_error_occurred())
           return nullptr;

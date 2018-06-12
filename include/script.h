@@ -2,11 +2,12 @@
 
 #include <string>
 
+#include "symbol.h"
+
 
 namespace olcl
 {
   struct node;
-  struct symbol;
 
   class script
   {

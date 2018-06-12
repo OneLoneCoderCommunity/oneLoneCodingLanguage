@@ -10,6 +10,7 @@
 #include "../compiler/parsing/node.h"
 #include "../include/engine.h"
 
+
 namespace olcl
 {
   namespace
@@ -61,15 +62,11 @@ namespace olcl
               dump_ast(*node.value.function.parameters, depth);
               std::cout << " -> ";
               dump_ast(*node.value.function.return_type, depth);
+              std::cout << ' ';
 
               if (node.value.function.code)
-              {
-                std::cout << " {\n";
-                dump_ast(*node.value.function.code, depth + 1u);
-                for (std::uint32_t i = 0; i < depth; ++i)
-                  std::cout << "  ";
-                std::cout << '}';
-              }
+                dump_ast(*node.value.function.code, depth);
+
               if (escape_next) std::cout << ')';
               break;
           }
@@ -97,13 +94,19 @@ namespace olcl
           break;
 
         case nt::t_block:
+          std::cout << "{\n";
+
           for (auto e : *node.block.code)
           {
-            for (std::uint32_t i = 0; i < depth; ++i)
+            for (std::uint32_t i = 0; i < depth + 1; ++i)
               std::cout << "  ";
-            dump_ast(*e, depth, false);
+            dump_ast(*e, depth + 1u, false);
             std::cout << ";\n";
           }
+
+          for (std::uint32_t i = 0; i < depth; ++i)
+              std::cout << "  ";
+          std::cout << '}';
           break;
 
         case nt::t_list:
@@ -114,6 +117,25 @@ namespace olcl
             std::cout << ", ";
           }
           if (escape_next) std::cout << ')';
+          break;
+
+        case nt::t_stmt_return:
+          std::cout << "return ";
+          dump_ast(*node.stmt_return.expression, depth, false);
+          break;
+
+        case nt::t_stmt_if:
+          std::cout << "if ";
+          dump_ast(*node.stmt_if.condition, depth);
+          std::cout << " then ";
+          dump_ast(*node.stmt_if.on_true, depth);
+
+          if (node.stmt_if.on_false)
+          {
+            std::cout << " else ";
+            dump_ast(*node.stmt_if.on_false, depth);
+          }
+
           break;
       }
     }
