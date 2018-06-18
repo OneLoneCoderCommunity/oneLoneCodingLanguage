@@ -1,0 +1,8 @@
+build
+
+# IDE Files
+.idea
+.vs
+*.sln
+*.vcxproj
+*.filters
